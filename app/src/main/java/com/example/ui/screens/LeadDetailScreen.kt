@@ -221,7 +221,14 @@ fun LeadDetailScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // 3. Vehicle & Financing Requirements Summary Card
-            VehicleAndFinancingCard(deal = deal, currencyFormatter = currencyFormatter)
+            VehicleAndFinancingCard(
+                deal = deal,
+                currencyFormatter = currencyFormatter,
+                onStatusChange = { newStatus ->
+                    viewModel.updateInstallmentStatus(deal.id, newStatus)
+                    Toast.makeText(context, "Installment status updated to $newStatus", Toast.LENGTH_SHORT).show()
+                }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -696,7 +703,8 @@ private fun StagePipelineCard(
 @Composable
 private fun VehicleAndFinancingCard(
     deal: DealEntity,
-    currencyFormatter: NumberFormat
+    currencyFormatter: NumberFormat,
+    onStatusChange: (String) -> Unit = {}
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -811,6 +819,50 @@ private fun VehicleAndFinancingCard(
                             else -> CrmAmber
                         }
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Quick State Switcher for Installment Application
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { onStatusChange("PENDING_PAPERS") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (deal.installmentStatus in listOf("PENDING_PAPERS", "PENDING", "SUBMITTED")) Color(0xFFFFF3E0) else Color.Transparent,
+                        contentColor = Color(0xFFE65100)
+                    )
+                ) {
+                    Text("⏳ Pending", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = { onStatusChange("APPROVED") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2E7D32),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("✅ Approve", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+
+                OutlinedButton(
+                    onClick = { onStatusChange("REJECTED") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (deal.installmentStatus in listOf("REJECTED", "CLIENT_CANCELLED")) Color(0xFFFFEBEE) else Color.Transparent,
+                        contentColor = Color(0xFFC62828)
+                    )
+                ) {
+                    Text("❌ Reject", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

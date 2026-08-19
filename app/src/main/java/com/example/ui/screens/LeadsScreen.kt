@@ -206,7 +206,7 @@ fun LeadsScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("بحث بالاسم، رقم الهاتف، نوع السيارة أو الملاحظات...") },
+                    placeholder = { Text("بحث باسم العميل، السيلز (نهلة، محمود...)، السيارة أو الهاتف...") },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = "بحث", tint = MaterialTheme.colorScheme.primary)
                     },
@@ -229,15 +229,126 @@ fun LeadsScreen(
                 )
             }
 
+            // Sales Representative Filter Chips Row
+            item {
+                val availableReps = remember(visibleDeals) {
+                    val fromDeals = visibleDeals.map { it.salesRep.trim() }.filter { it.isNotBlank() }
+                    val defaultReps = listOf("Ali", "Marwan", "Mahmoud", "Nahla", "Esraa", "Nada", "Alaa")
+                    (fromDeals + defaultReps).distinct()
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "فلترة حسب السيلز المسؤول (Sales Representative):",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        if (selectedRepFilter != null || selectedStatusFilter != null || selectedSourceFilter != null || searchQuery.isNotBlank()) {
+                            Text(
+                                text = "مسح الفلاتر",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clickable {
+                                        searchQuery = ""
+                                        selectedRepFilter = null
+                                        selectedStatusFilter = null
+                                        selectedSourceFilter = null
+                                    }
+                                    .padding(4.dp)
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = selectedRepFilter == null,
+                            onClick = { selectedRepFilter = null },
+                            label = { Text("جميع الممثلين (${visibleDeals.size})") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            modifier = Modifier.testTag("filter_rep_all")
+                        )
+
+                        availableReps.forEach { rep ->
+                            val isSelected = selectedRepFilter.equals(rep, ignoreCase = true)
+                            val repCount = visibleDeals.count { it.salesRep.equals(rep, ignoreCase = true) }
+                            val repArabic = when (rep.lowercase()) {
+                                "ali" -> "علي"
+                                "marwan" -> "مروان"
+                                "mahmoud" -> "محمود"
+                                "nahla" -> "نهلة"
+                                "esraa", "israa" -> "إسراء"
+                                "nada" -> "ندى"
+                                "alaa" -> "علاء"
+                                else -> rep
+                            }
+
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedRepFilter = if (isSelected) null else rep
+                                },
+                                label = {
+                                    Text(
+                                        text = "$repArabic ($repCount)",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.secondary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onSecondary
+                                ),
+                                modifier = Modifier.testTag("filter_rep_${rep.lowercase()}")
+                            )
+                        }
+                    }
+                }
+            }
+
             // Status Filter Chips Row
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "فلترة حسب حالة العميل (Lead Status):",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "فلترة حسب حالة العميل (Lead Status):",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     Row(
                         modifier = Modifier
@@ -248,11 +359,12 @@ fun LeadsScreen(
                         FilterChip(
                             selected = selectedStatusFilter == null,
                             onClick = { selectedStatusFilter = null },
-                            label = { Text("الكل ($totalCount)") },
+                            label = { Text("كل الحالات ($totalCount)") },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                            ),
+                            modifier = Modifier.testTag("filter_status_all")
                         )
 
                         FilterChip(
@@ -260,11 +372,12 @@ fun LeadsScreen(
                             onClick = {
                                 selectedStatusFilter = if (selectedStatusFilter == DealStage.PROSPECTING.name) null else DealStage.PROSPECTING.name
                             },
-                            label = { Text("جديد ($newCount)") },
+                            label = { Text("🎯 جديد Prospecting ($newCount)") },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFF3F51B5),
                                 selectedLabelColor = Color.White
-                            )
+                            ),
+                            modifier = Modifier.testTag("filter_status_prospecting")
                         )
 
                         FilterChip(
@@ -272,23 +385,60 @@ fun LeadsScreen(
                             onClick = {
                                 selectedStatusFilter = if (selectedStatusFilter == DealStage.QUALIFICATION.name) null else DealStage.QUALIFICATION.name
                             },
-                            label = { Text("مؤهل ($qualifiedCount)") },
+                            label = { Text("📋 مؤهل Qualified ($qualifiedCount)") },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFF00897B),
                                 selectedLabelColor = Color.White
-                            )
+                            ),
+                            modifier = Modifier.testTag("filter_status_qualified")
                         )
 
                         FilterChip(
-                            selected = selectedStatusFilter in listOf(DealStage.PROPOSAL.name, DealStage.VIEWING.name, DealStage.NEGOTIATION.name),
+                            selected = selectedStatusFilter == DealStage.PROPOSAL.name,
                             onClick = {
                                 selectedStatusFilter = if (selectedStatusFilter == DealStage.PROPOSAL.name) null else DealStage.PROPOSAL.name
                             },
-                            label = { Text("أوراق ومفاوضات ($inProgressCount)") },
+                            label = {
+                                val count = visibleDeals.count { it.stage == DealStage.PROPOSAL.name }
+                                Text("📄 أوراق Papers ($count)")
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFFE65100),
                                 selectedLabelColor = Color.White
-                            )
+                            ),
+                            modifier = Modifier.testTag("filter_status_proposal")
+                        )
+
+                        FilterChip(
+                            selected = selectedStatusFilter == DealStage.VIEWING.name,
+                            onClick = {
+                                selectedStatusFilter = if (selectedStatusFilter == DealStage.VIEWING.name) null else DealStage.VIEWING.name
+                            },
+                            label = {
+                                val count = visibleDeals.count { it.stage == DealStage.VIEWING.name }
+                                Text("🚗 معاينة Viewing ($count)")
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFFF57F17),
+                                selectedLabelColor = Color.White
+                            ),
+                            modifier = Modifier.testTag("filter_status_viewing")
+                        )
+
+                        FilterChip(
+                            selected = selectedStatusFilter == DealStage.NEGOTIATION.name,
+                            onClick = {
+                                selectedStatusFilter = if (selectedStatusFilter == DealStage.NEGOTIATION.name) null else DealStage.NEGOTIATION.name
+                            },
+                            label = {
+                                val count = visibleDeals.count { it.stage == DealStage.NEGOTIATION.name }
+                                Text("🤝 مفاوضات Negotiation ($count)")
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF0288D1),
+                                selectedLabelColor = Color.White
+                            ),
+                            modifier = Modifier.testTag("filter_status_negotiation")
                         )
 
                         FilterChip(
@@ -296,11 +446,12 @@ fun LeadsScreen(
                             onClick = {
                                 selectedStatusFilter = if (selectedStatusFilter == DealStage.DONE.name) null else DealStage.DONE.name
                             },
-                            label = { Text("تم البيع ($wonCount)") },
+                            label = { Text("🏆 تم البيع Won ($wonCount)") },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFF2E7D32),
                                 selectedLabelColor = Color.White
-                            )
+                            ),
+                            modifier = Modifier.testTag("filter_status_won")
                         )
 
                         FilterChip(
@@ -308,11 +459,12 @@ fun LeadsScreen(
                             onClick = {
                                 selectedStatusFilter = if (selectedStatusFilter == DealStage.LOST.name) null else DealStage.LOST.name
                             },
-                            label = { Text("ضائع / تدوير ($lostCount)") },
+                            label = { Text("❌ ضائع Lost ($lostCount)") },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFFC62828),
                                 selectedLabelColor = Color.White
-                            )
+                            ),
+                            modifier = Modifier.testTag("filter_status_lost")
                         )
                     }
                 }
@@ -466,43 +618,62 @@ fun IncomingLeadCard(
     }
 
     // Color definitions for status indicators and badges
-    val (statusBg, statusBorder, statusFg, statusIcon, statusLabel) = when (stageEnum) {
-        DealStage.PROSPECTING -> (
-            Color(0xFFEEF2FF) to Color(0xFF6366F1)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFF3730A3), "🎯", "Prospecting • ليد جديد")
-        }
-        DealStage.QUALIFICATION -> (
-            Color(0xFFE6FFFA) to Color(0xFF14B8A6)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFF0F766E), "📋", "Qualified • مؤهل")
-        }
-        DealStage.PROPOSAL -> (
-            Color(0xFFFFF7ED) to Color(0xFFF97316)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFFC2410C), "📄", "Papers • أوراق التقسيط")
-        }
-        DealStage.VIEWING -> (
-            Color(0xFFFEFCE8) to Color(0xFFEAB308)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFFA16207), "🚗", "Viewing • معاينة")
-        }
-        DealStage.NEGOTIATION -> (
-            Color(0xFFF0F9FF) to Color(0xFF0284C7)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFF0369A1), "🤝", "Negotiation • مفاوضات")
-        }
-        DealStage.DONE -> (
-            Color(0xFFECFDF5) to Color(0xFF10B981)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFF047857), "🏆", "Won • تم البيع")
-        }
-        DealStage.LOST -> (
-            Color(0xFFFFF1F2) to Color(0xFFF43F5E)
-        ).let { (bg, border) ->
-            Tuple5(bg, border, Color(0xFFBE123C), "❌", "Lost • فرصة ضائعة")
-        }
+    val statusStyle = when (stageEnum) {
+        DealStage.PROSPECTING -> LeadCardStatusStyle(
+            bg = Color(0xFFEEF2FF),
+            border = Color(0xFF6366F1),
+            fg = Color(0xFF3730A3),
+            icon = "🎯",
+            label = "Prospecting • ليد جديد"
+        )
+        DealStage.QUALIFICATION -> LeadCardStatusStyle(
+            bg = Color(0xFFE6FFFA),
+            border = Color(0xFF14B8A6),
+            fg = Color(0xFF0F766E),
+            icon = "📋",
+            label = "Qualified • مؤهل"
+        )
+        DealStage.PROPOSAL -> LeadCardStatusStyle(
+            bg = Color(0xFFFFF7ED),
+            border = Color(0xFFF97316),
+            fg = Color(0xFFC2410C),
+            icon = "📄",
+            label = "Papers • أوراق التقسيط"
+        )
+        DealStage.VIEWING -> LeadCardStatusStyle(
+            bg = Color(0xFFFEFCE8),
+            border = Color(0xFFEAB308),
+            fg = Color(0xFFA16207),
+            icon = "🚗",
+            label = "Viewing • معاينة"
+        )
+        DealStage.NEGOTIATION -> LeadCardStatusStyle(
+            bg = Color(0xFFF0F9FF),
+            border = Color(0xFF0284C7),
+            fg = Color(0xFF0369A1),
+            icon = "🤝",
+            label = "Negotiation • مفاوضات"
+        )
+        DealStage.DONE -> LeadCardStatusStyle(
+            bg = Color(0xFFECFDF5),
+            border = Color(0xFF10B981),
+            fg = Color(0xFF047857),
+            icon = "🏆",
+            label = "Won • تم البيع"
+        )
+        DealStage.LOST -> LeadCardStatusStyle(
+            bg = Color(0xFFFFF1F2),
+            border = Color(0xFFF43F5E),
+            fg = Color(0xFFBE123C),
+            icon = "❌",
+            label = "Lost • فرصة ضائعة"
+        )
     }
+    val statusBg = statusStyle.bg
+    val statusBorder = statusStyle.border
+    val statusFg = statusStyle.fg
+    val statusIcon = statusStyle.icon
+    val statusLabel = statusStyle.label
 
     val sourceBadgeColor = when (lead.leadSource) {
         LeadSource.META_ADS.name -> Color(0xFF1877F2)
@@ -816,10 +987,10 @@ fun IncomingLeadCard(
     }
 }
 
-private data class Tuple5<A, B, C, D, E>(
-    val a: A,
-    val b: B,
-    val c: C,
-    val d: D,
-    val e: E
+private data class LeadCardStatusStyle(
+    val bg: Color,
+    val border: Color,
+    val fg: Color,
+    val icon: String,
+    val label: String
 )

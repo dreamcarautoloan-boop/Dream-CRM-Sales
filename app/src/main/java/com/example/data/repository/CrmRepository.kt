@@ -84,6 +84,17 @@ class CrmRepository(
     suspend fun updateCommissionStatus(id: Long, isReceived: Boolean, notes: String) =
         crmDao.updateCommissionStatus(id, isReceived, notes)
 
+    suspend fun updateInstallmentApplication(
+        id: Long,
+        partner: String,
+        status: String,
+        loanAmount: Double,
+        downPayment: Double
+    ) = crmDao.updateInstallmentApplication(id, partner, status, loanAmount, downPayment)
+
+    suspend fun updateInstallmentStatus(id: Long, status: String) =
+        crmDao.updateInstallmentStatus(id, status)
+
     // --- ACTIVITY LOGS ---
     suspend fun insertCallLog(log: CallLogEntity): Long = crmDao.insertCallLog(log)
     suspend fun deleteCallLog(log: CallLogEntity) = crmDao.deleteCallLog(log)

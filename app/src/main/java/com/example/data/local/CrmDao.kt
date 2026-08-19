@@ -51,6 +51,23 @@ interface CrmDao {
     @Query("UPDATE deals SET isCommissionReceived = :isReceived, receivedNotes = :notes, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateCommissionStatus(id: Long, isReceived: Boolean, notes: String, updatedAt: Long = System.currentTimeMillis())
 
+    @Query("UPDATE deals SET installmentPartner = :partner, installmentStatus = :status, loanAmount = :loanAmount, downPayment = :downPayment, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateInstallmentApplication(
+        id: Long,
+        partner: String,
+        status: String,
+        loanAmount: Double,
+        downPayment: Double,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Query("UPDATE deals SET installmentStatus = :status, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateInstallmentStatus(
+        id: Long,
+        status: String,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
     // --- CALL / ACTIVITY LOGS ---
     @Query("SELECT * FROM call_logs ORDER BY timestamp DESC")
     fun getAllCallLogs(): Flow<List<CallLogEntity>>

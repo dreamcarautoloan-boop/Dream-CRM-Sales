@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PostAdd
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -78,6 +79,7 @@ import com.example.ui.dialogs.MetaLeadIntakeDialog
 import com.example.ui.screens.ActivitiesScreen
 import com.example.ui.screens.DealsScreen
 import com.example.ui.screens.FinancialsScreen
+import com.example.ui.screens.InstallmentApplicationsScreen
 import com.example.ui.screens.LeadDetailScreen
 import com.example.ui.screens.LeadsScreen
 import com.example.ui.screens.LoginScreen
@@ -86,6 +88,7 @@ import com.example.ui.screens.TeamTargetsScreen
 enum class CrmTab(val title: String, val icon: ImageVector) {
     LEADS("Leads", Icons.Default.FilterList),
     DEALS("Pipeline", Icons.Default.BusinessCenter),
+    INSTALLMENTS("Installments", Icons.Default.Receipt),
     TARGETS("Team & Reps", Icons.Default.Leaderboard),
     FINANCIALS("P&L Financials", Icons.Default.AccountBalance),
     ACTIVITIES("Call Logs", Icons.Default.Call)
@@ -384,6 +387,12 @@ fun CrmMainScreen(
                         logSalesRep = deal.salesRep
                         showLogDialog = true
                     }
+                )
+
+                CrmTab.INSTALLMENTS -> InstallmentApplicationsScreen(
+                    state = state,
+                    viewModel = viewModel,
+                    onLeadClick = { deal -> selectedLeadForDetail = deal }
                 )
 
                 CrmTab.TARGETS -> TeamTargetsScreen(

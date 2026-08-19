@@ -657,6 +657,43 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateInstallmentStatus(dealId: Long, newStatus: String) {
+        viewModelScope.launch {
+            repository.updateInstallmentStatus(dealId, newStatus)
+            leadService.updateLeadStatus(dealId.toString(), newStatus)
+        }
+    }
+
+    fun linkCustomerToInstallmentPartner(
+        dealId: Long,
+        partner: String,
+        status: String,
+        loanAmount: Double,
+        downPayment: Double,
+        notes: String? = null
+    ) {
+        viewModelScope.launch {
+            repository.updateInstallmentApplication(dealId, partner, status, loanAmount, downPayment)
+            if (!notes.isNullOrBlank()) {
+                // If notes updated, refresh deal
+                val current = stateValue().deals.find { it.id == dealId }
+                if (current != null) {
+                    val updatedNotes = if (current.notes.isBlank()) notes else "${current.notes}\n[Installment]: $notes"
+                    repository.updateDeal(current.copy(
+                        installmentPartner = partner,
+                        installmentStatus = status,
+                        loanAmount = loanAmount,
+                        downPayment = downPayment,
+                        notes = updatedNotes,
+                        updatedAt = System.currentTimeMillis()
+                    ))
+                }
+            }
+        }
+    }
+
+    private fun stateValue(): CrmUiState = uiState.value
+
     fun addCallLog(
         clientId: Long? = null,
         clientName: String,

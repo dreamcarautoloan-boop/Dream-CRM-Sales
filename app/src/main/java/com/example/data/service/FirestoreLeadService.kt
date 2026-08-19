@@ -333,4 +333,23 @@ class FirestoreLeadService {
             Result.failure(e)
         }
     }
+
+    /**
+     * Updates the status or installmentStatus of a lead in Firestore.
+     */
+    suspend fun updateLeadStatus(leadId: String, status: String): Result<Unit> {
+        return try {
+            val fs = firestore ?: return Result.success(Unit)
+            val docId = if (leadId.startsWith("lead_")) leadId else "lead_$leadId"
+            val updates = hashMapOf<String, Any>(
+                "installmentStatus" to status,
+                "updatedAt" to System.currentTimeMillis()
+            )
+            fs.collection(LEADS_COLLECTION).document(docId).set(updates, SetOptions.merge()).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating lead status in Firestore: ${e.message}")
+            Result.failure(e)
+        }
+    }
 }
