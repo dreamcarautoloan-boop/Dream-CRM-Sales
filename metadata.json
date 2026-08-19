@@ -1,0 +1,6 @@
+{
+  "name": "CRM",
+  "description": "Comprehensive Sales & Client Relationship Management application for tracking client leads, deal pipelines, team commission schemes, performance targets, and financial metrics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

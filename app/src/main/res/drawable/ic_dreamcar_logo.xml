@@ -1,0 +1,117 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Background Rounded Badge with Gradient -->
+    <path
+        android:pathData="M24,10 L96,10 A14,14 0 0,1 110,24 L110,80 A30,30 0 0,1 80,110 L40,110 A30,30 0 0,1 10,80 L10,24 A14,14 0 0,1 24,10 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:angle="135"
+                android:endColor="#0A192F"
+                android:startColor="#1E3A8A"
+                android:type="linear" />
+        </aapt:attr>
+    </path>
+
+    <!-- Outer Gold Trim Shield Outline -->
+    <path
+        android:pathData="M24,13 L96,13 A11,11 0 0,1 107,24 L107,78 A27,27 0 0,1 80,105 L40,105 A27,27 0 0,1 13,78 L13,24 A11,11 0 0,1 24,13 Z"
+        android:strokeWidth="2">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:angle="45"
+                android:endColor="#F59E0B"
+                android:startColor="#FBBF24"
+                android:type="linear" />
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing Amber Accent Arc -->
+    <path
+        android:pathData="M20,42 Q60,32 100,42"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.6"/>
+
+    <!-- Luxury Sports Car Silhouette (Top Roofline & Windshield) -->
+    <path
+        android:pathData="M26,68 C30,65 38,62 48,52 C54,46 66,44 76,46 C84,48 90,56 94,64 L96,68 L26,68 Z"
+        android:fillColor="#1E293B"
+        android:strokeColor="#FBBF24"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Car Windshield & Side Glass -->
+    <path
+        android:pathData="M50,53 C54,48 64,47 72,48 C77,50 82,56 85,63 L54,63 Z"
+        android:fillColor="#38BDF8"
+        android:fillAlpha="0.85" />
+
+    <!-- Car Body Lower Aerodynamic Baseline -->
+    <path
+        android:pathData="M20,72 L25,68 L95,68 L100,72 Q102,77 96,79 L88,79 A8,8 0 0,1 72,79 L48,79 A8,8 0 0,1 32,79 L24,79 Q18,77 20,72 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:angle="90"
+                android:endColor="#0F172A"
+                android:startColor="#D97706"
+                android:type="linear" />
+        </aapt:attr>
+    </path>
+
+    <!-- Speed Headlight Beams (Front Left / Right) -->
+    <path
+        android:pathData="M23,70 L15,73 M24,73 L17,77"
+        android:strokeColor="#FDE047"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Rear Tail Light Glow -->
+    <path
+        android:pathData="M97,70 L104,72"
+        android:strokeColor="#EF4444"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Front & Rear Wheels / Alloy Rims -->
+    <!-- Front Wheel -->
+    <path
+        android:pathData="M40,79 A6,6 0 1,1 40,67 A6,6 0 1,1 40,79 Z"
+        android:fillColor="#0F172A"
+        android:strokeColor="#FBBF24"
+        android:strokeWidth="2" />
+    <path
+        android:pathData="M40,75 A2,2 0 1,1 40,71 A2,2 0 1,1 40,75 Z"
+        android:fillColor="#FBBF24" />
+
+    <!-- Rear Wheel -->
+    <path
+        android:pathData="M80,79 A6,6 0 1,1 80,67 A6,6 0 1,1 80,79 Z"
+        android:fillColor="#0F172A"
+        android:strokeColor="#FBBF24"
+        android:strokeWidth="2" />
+    <path
+        android:pathData="M80,75 A2,2 0 1,1 80,71 A2,2 0 1,1 80,75 Z"
+        android:fillColor="#FBBF24" />
+
+    <!-- Financial Loan Shield Crest at Bottom Center -->
+    <path
+        android:pathData="M55,87 L65,87 L65,95 Q60,99 60,99 Q55,95 55,95 Z"
+        android:fillColor="#F59E0B"
+        android:strokeColor="#FDE047"
+        android:strokeWidth="1" />
+
+    <!-- Sparkle Stars for Premium Feel -->
+    <path
+        android:pathData="M92,26 L94,30 L98,32 L94,34 L92,38 L90,34 L86,32 L90,30 Z"
+        android:fillColor="#FDE047" />
+
+    <path
+        android:pathData="M28,30 L29,32 L31,33 L29,34 L28,36 L27,34 L25,33 L27,32 Z"
+        android:fillColor="#38BDF8" />
+</vector>
