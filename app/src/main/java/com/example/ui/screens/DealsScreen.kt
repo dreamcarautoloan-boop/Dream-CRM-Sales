@@ -331,7 +331,10 @@ fun DealsScreen(
                         PipelineKanbanView(
                             state = state,
                             onCall = { phone -> FormattingUtils.dialPhoneNumber(context, phone) },
-                            onWhatsApp = { phone, name -> FormattingUtils.openWhatsApp(context, phone, name) },
+                            onWhatsApp = { deal ->
+                                FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName)
+                                viewModel.logWhatsAppOpened(deal)
+                            },
                             onEdit = onEditDeal,
                             onSelectDeal = onSelectDeal,
                             onAdvanceStage = { deal, nextStage -> viewModel.updateDealStage(deal.id, nextStage.name, nextStage.defaultProbability) },
@@ -361,7 +364,10 @@ fun DealsScreen(
                                 deal = deal,
                                 currentRole = state.currentRole,
                                 onCall = { FormattingUtils.dialPhoneNumber(context, deal.phone) },
-                                onWhatsApp = { FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName) },
+                                onWhatsApp = {
+                                    FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName)
+                                    viewModel.logWhatsAppOpened(deal)
+                                },
                                 onLog = { onLogInteraction(deal) },
                                 onEdit = { onEditDeal(deal) },
                                 onSelect = { onSelectDeal(deal) },
@@ -429,7 +435,10 @@ fun DealsScreen(
                                 deal = deal,
                                 currentRole = state.currentRole,
                                 onCall = { FormattingUtils.dialPhoneNumber(context, deal.phone) },
-                                onWhatsApp = { FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName) },
+                                onWhatsApp = {
+                                    FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName)
+                                    viewModel.logWhatsAppOpened(deal)
+                                },
                                 onLog = { onLogInteraction(deal) },
                                 onEdit = { onEditDeal(deal) },
                                 onSelect = { onSelectDeal(deal) },
@@ -498,7 +507,10 @@ fun DealsScreen(
                                     isRecyclingMode = true
                                 },
                                 onCall = { FormattingUtils.dialPhoneNumber(context, deal.phone) },
-                                onWhatsApp = { FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName) },
+                                onWhatsApp = {
+                                    FormattingUtils.openWhatsApp(context, deal.phone, deal.clientName)
+                                    viewModel.logWhatsAppOpened(deal)
+                                },
                                 onEdit = { onEditDeal(deal) },
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
@@ -783,7 +795,7 @@ fun PipelineSummaryHeader(state: CrmUiState) {
 fun PipelineKanbanView(
     state: CrmUiState,
     onCall: (String) -> Unit,
-    onWhatsApp: (String, String) -> Unit,
+    onWhatsApp: (DealEntity) -> Unit,
     onEdit: (DealEntity) -> Unit,
     onSelectDeal: (DealEntity) -> Unit = onEdit,
     onAdvanceStage: (DealEntity, DealStage) -> Unit,
@@ -874,7 +886,7 @@ fun PipelineKanbanView(
                                 KanbanDealItem(
                                     deal = deal,
                                     onCall = { onCall(deal.phone) },
-                                    onWhatsApp = { onWhatsApp(deal.phone, deal.clientName) },
+                                    onWhatsApp = { onWhatsApp(deal) },
                                     onEdit = { onEdit(deal) },
                                     onSelect = { onSelectDeal(deal) },
                                     onAdvanceStage = {

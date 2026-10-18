@@ -577,6 +577,7 @@ fun LeadsScreen(
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                 try {
                                     context.startActivity(intent)
+                                    viewModel.logWhatsAppOpened(lead)
                                 } catch (e: Exception) {
                                     Toast.makeText(context, "واتساب غير مثبت", Toast.LENGTH_SHORT).show()
                                 }

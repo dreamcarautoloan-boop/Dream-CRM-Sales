@@ -13,6 +13,8 @@ import com.example.data.model.DealStage
 import com.example.data.model.InstallmentPartner
 import com.example.data.model.InstallmentStatus
 import com.example.data.model.InterestLevel
+import com.example.data.model.InteractionOutcome
+import com.example.data.model.InteractionType
 import com.example.data.model.LeadSource
 import com.example.data.model.MonthlyFinancialEntity
 import com.example.data.model.QualificationStatus
@@ -749,6 +751,36 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
             )
             repository.insertCallLog(log)
         }
+    }
+
+    /**
+     * Auto-logs a WhatsApp activity when a WhatsApp chat is opened from the CRM.
+     * Repeated taps on the same client within 2 minutes are logged once.
+     */
+    fun logWhatsAppOpened(deal: DealEntity) {
+        if (deal.phone.isBlank()) return
+        val state = stateValue()
+        val actor = if (state.currentRole == UserRole.SALES_REP) {
+            state.activeRepName
+        } else {
+            state.currentUser?.displayName ?: state.currentRole.displayName
+        }
+        val now = System.currentTimeMillis()
+        val recentlyLogged = state.callLogs.any {
+            it.interactionType == InteractionType.WHATSAPP.name &&
+                it.clientName == deal.clientName.trim() &&
+                it.salesRep == actor &&
+                now - it.timestamp < 2 * 60 * 1000
+        }
+        if (recentlyLogged) return
+        addCallLog(
+            clientId = deal.id,
+            clientName = deal.clientName,
+            salesRep = actor,
+            interactionType = InteractionType.WHATSAPP.name,
+            outcome = InteractionOutcome.FOLLOW_UP.name,
+            notes = "تم فتح محادثة واتساب مع العميل من الـ CRM (تسجيل تلقائي)"
+        )
     }
 
     fun deleteCallLog(log: CallLogEntity) {

@@ -200,7 +200,10 @@ fun LeadDetailScreen(
             LeadHeaderBanner(
                 deal = deal,
                 onCall = { openPhoneDialer(context, deal.phone) },
-                onWhatsApp = { openWhatsApp(context, deal.phone, deal.clientName, deal.carModel) },
+                onWhatsApp = {
+                    openWhatsApp(context, deal.phone, deal.clientName, deal.carModel)
+                    viewModel.logWhatsAppOpened(deal)
+                },
                 onCopy = {
                     clipboardManager.setText(AnnotatedString(deal.phone))
                     Toast.makeText(context, "Phone number copied: ${deal.phone}", Toast.LENGTH_SHORT).show()
@@ -236,7 +239,10 @@ fun LeadDetailScreen(
             ContactInformationCard(
                 deal = deal,
                 onCall = { openPhoneDialer(context, deal.phone) },
-                onWhatsApp = { openWhatsApp(context, deal.phone, deal.clientName, deal.carModel) },
+                onWhatsApp = {
+                    openWhatsApp(context, deal.phone, deal.clientName, deal.carModel)
+                    viewModel.logWhatsAppOpened(deal)
+                },
                 onReassign = {
                     if (state.permissions.canReassignDeals) {
                         showReassignDialog = true

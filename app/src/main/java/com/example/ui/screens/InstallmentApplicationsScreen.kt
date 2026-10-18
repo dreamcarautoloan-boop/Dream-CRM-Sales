@@ -482,6 +482,7 @@ fun InstallmentApplicationsScreen(
                                 phone = deal.phone,
                                 clientName = deal.clientName
                             )
+                            viewModel.logWhatsAppOpened(deal)
                         }
                     )
                 }
