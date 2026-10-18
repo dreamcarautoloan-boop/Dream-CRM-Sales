@@ -42,8 +42,17 @@ interface CrmDao {
     @Query("UPDATE deals SET stage = :stage, probability = :probability, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateDealStageAndProbability(id: Long, stage: String, probability: Int, updatedAt: Long = System.currentTimeMillis())
 
-    @Query("UPDATE deals SET salesRep = :newRep, isLostRecycled = :isRecycled, updatedAt = :updatedAt WHERE id = :id")
+    @Query("UPDATE deals SET salesRep = :newRep, isLostRecycled = :isRecycled, lostReason = CASE WHEN closureStatus = 'PENDING' AND closureRequestedStage = 'LOST' THEN '' ELSE lostReason END, closureStatus = 'NONE', closureRequestedStage = '', closureRequestedBy = '', updatedAt = :updatedAt WHERE id = :id")
     suspend fun reassignDeal(id: Long, newRep: String, isRecycled: Boolean = false, updatedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE deals SET closureStatus = 'PENDING', closureRequestedStage = :stage, closureRequestedBy = :requestedBy, lostReason = CASE WHEN :stage = 'LOST' THEN :reason ELSE lostReason END, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun requestClosure(id: Long, stage: String, requestedBy: String, reason: String, updatedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE deals SET stage = closureRequestedStage, probability = CASE WHEN closureRequestedStage = 'DONE' THEN 100 ELSE 0 END, closureStatus = 'NONE', closureRequestedStage = '', closureRequestedBy = '', updatedAt = :updatedAt WHERE id = :id AND closureStatus = 'PENDING'")
+    suspend fun approveClosure(id: Long, updatedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE deals SET lostReason = CASE WHEN closureRequestedStage = 'LOST' THEN '' ELSE lostReason END, closureStatus = 'REJECTED', closureRequestedStage = '', updatedAt = :updatedAt WHERE id = :id AND closureStatus = 'PENDING'")
+    suspend fun rejectClosure(id: Long, updatedAt: Long = System.currentTimeMillis())
 
     @Query("UPDATE deals SET stage = 'LOST', lostReason = :lostReason, probability = 0, updatedAt = :updatedAt WHERE id = :id")
     suspend fun markDealAsLost(id: Long, lostReason: String, updatedAt: Long = System.currentTimeMillis())

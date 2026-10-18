@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.ViewKanban
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -80,6 +81,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.ClosureStatus
 import com.example.data.model.DealEntity
 import com.example.data.model.DealStage
 import com.example.data.model.UserRole
@@ -223,6 +225,21 @@ fun DealsScreen(
                             }
                         }
                     }
+                }
+            }
+
+            // Closure approvals (managers / team leaders only)
+            if (state.pendingClosures.isNotEmpty() && state.permissions.canReassignDeals) {
+                item {
+                    ClosureApprovalsSection(
+                        deals = state.pendingClosures,
+                        onApprove = { viewModel.approveClosure(it.id) },
+                        onReject = { viewModel.rejectClosure(it.id) },
+                        onReassign = {
+                            dealToReassign = it
+                            isRecyclingMode = false
+                        }
+                    )
                 }
             }
 
@@ -593,6 +610,69 @@ fun DealsScreen(
 }
 
 @Composable
+fun ClosureApprovalsSection(
+    deals: List<DealEntity>,
+    onApprove: (DealEntity) -> Unit,
+    onReject: (DealEntity) -> Unit,
+    onReassign: (DealEntity) -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "طلبات الإغلاق بانتظار موافقتك (${deals.size})",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = CrmAmber
+        )
+        deals.forEach { deal ->
+            val isWon = deal.closureRequestedStage == DealStage.DONE.name
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = CrmAmberContainer),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(deal.clientName, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        text = "${deal.closureRequestedBy.ifBlank { deal.salesRep }} طلب: " +
+                            if (isWon) "إغلاق البيع (إتمام)" else "إلغاء الصفقة",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (!isWon && deal.lostReason.isNotBlank()) {
+                        Text(
+                            text = "السبب: ${deal.lostReason}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = { onApprove(deal) },
+                            colors = ButtonDefaults.buttonColors(containerColor = CrmEmerald),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.weight(1f)
+                        ) { Text("موافقة", style = MaterialTheme.typography.labelSmall) }
+                        OutlinedButton(
+                            onClick = { onReject(deal) },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.weight(1f)
+                        ) { Text("رفض", style = MaterialTheme.typography.labelSmall, color = CrmRose) }
+                        OutlinedButton(
+                            onClick = { onReassign(deal) },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.weight(1f)
+                        ) { Text("إسناد لسيلز", style = MaterialTheme.typography.labelSmall) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun PipelineSummaryHeader(state: CrmUiState) {
     val activeDealsCount = state.deals.count { it.stage != "DONE" && it.stage != "LOST" }
     val wonDealsCount = state.deals.count { it.stage == "DONE" }
@@ -857,6 +937,21 @@ fun KanbanDealItem(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (deal.closureStatus == ClosureStatus.PENDING) {
+                        Text(
+                            text = "⏳ بانتظار موافقة المدير على الإغلاق",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = CrmAmber
+                        )
+                    } else if (deal.closureStatus == ClosureStatus.REJECTED) {
+                        Text(
+                            text = "❌ المدير رفض طلب الإغلاق",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = CrmRose
+                        )
+                    }
                 }
 
                 Text(
@@ -927,7 +1022,7 @@ fun KanbanDealItem(
                     Text("Call", style = MaterialTheme.typography.labelSmall)
                 }
 
-                if (deal.stage != DealStage.DONE.name && deal.stage != DealStage.LOST.name) {
+                if (deal.stage != DealStage.DONE.name && deal.stage != DealStage.LOST.name && deal.closureStatus != ClosureStatus.PENDING) {
                     OutlinedButton(
                         onClick = onAdvanceStage,
                         shape = RoundedCornerShape(8.dp),

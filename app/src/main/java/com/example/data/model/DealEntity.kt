@@ -89,5 +89,15 @@ data class DealEntity(
     val date: String = "",
     val notes: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    // Closure approval workflow: NONE / PENDING (waiting manager) / REJECTED
+    val closureStatus: String = ClosureStatus.NONE,
+    val closureRequestedStage: String = "", // "DONE" or "LOST"
+    val closureRequestedBy: String = ""
 )
+
+object ClosureStatus {
+    const val NONE = "NONE"
+    const val PENDING = "PENDING"
+    const val REJECTED = "REJECTED"
+}

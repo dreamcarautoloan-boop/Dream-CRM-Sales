@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.model.CallLogEntity
 import com.example.data.model.CustomerEntity
@@ -28,7 +29,7 @@ import kotlinx.coroutines.launch
         SalesRepTargetEntity::class,
         MonthlyFinancialEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class CrmDatabase : RoomDatabase() {
@@ -39,6 +40,14 @@ abstract class CrmDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: CrmDatabase? = null
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE deals ADD COLUMN closureStatus TEXT NOT NULL DEFAULT 'NONE'")
+                db.execSQL("ALTER TABLE deals ADD COLUMN closureRequestedStage TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE deals ADD COLUMN closureRequestedBy TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)): CrmDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -46,6 +55,7 @@ abstract class CrmDatabase : RoomDatabase() {
                     CrmDatabase::class.java,
                     "crm_sales_database"
                 )
+                    .addMigrations(MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .addCallback(CrmDatabaseCallback(scope))
                     .build()

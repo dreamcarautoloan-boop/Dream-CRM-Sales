@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.CrmDatabase
 import com.example.data.model.CallLogEntity
+import com.example.data.model.ClosureStatus
 import com.example.data.model.CrmUser
 import com.example.data.model.DealEntity
 import com.example.data.model.DealStage
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -71,6 +73,7 @@ data class CrmUiState(
     val deals: List<DealEntity> = emptyList(),
     val filteredDeals: List<DealEntity> = emptyList(),
     val lostDeals: List<DealEntity> = emptyList(),
+    val pendingClosures: List<DealEntity> = emptyList(),
     val todayFollowUps: List<DealEntity> = emptyList(),
     val callLogs: List<CallLogEntity> = emptyList(),
     val targets: List<SalesRepTargetEntity> = emptyList(),
@@ -352,6 +355,7 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
             deals = visibleDeals,
             filteredDeals = filtered,
             lostDeals = lostDealsList,
+            pendingClosures = if (role == UserRole.SALES_REP) emptyList() else deals.filter { it.closureStatus == ClosureStatus.PENDING },
             todayFollowUps = todayFollowUpsList,
             callLogs = callLogs,
             targets = targets,
@@ -565,14 +569,17 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             val calcComm = if (commissionAmount > 0.0) commissionAmount else amount * commissionRate
+            val existing = if (id != 0L) repository.getDealById(id).first() else null
+            val repClosing = stateValue().currentRole == UserRole.SALES_REP && isClosureStage(stage) &&
+                !stage.equals(existing?.stage, ignoreCase = true)
             val deal = DealEntity(
                 id = id,
                 clientName = clientName.trim(),
                 phone = phone.trim(),
                 salesRep = salesRep.trim(),
-                stage = stage,
+                stage = if (repClosing) existing?.stage ?: DealStage.PROSPECTING.name else stage,
                 amount = amount,
-                probability = probability,
+                probability = if (repClosing) existing?.probability ?: probability else probability,
                 expectedCloseDate = expectedCloseDate.trim(),
                 carModel = carModel.trim(),
                 carType = carType,
@@ -591,12 +598,18 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
                 receivedNotes = receivedNotes.trim(),
                 date = date.trim(),
                 notes = notes.trim(),
-                updatedAt = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis(),
+                closureStatus = existing?.closureStatus ?: ClosureStatus.NONE,
+                closureRequestedStage = existing?.closureRequestedStage.orEmpty(),
+                closureRequestedBy = existing?.closureRequestedBy.orEmpty()
             )
             if (id == 0L) {
                 repository.insertDeal(deal)
             } else {
                 repository.updateDeal(deal)
+                if (repClosing) {
+                    repository.requestClosure(id, stage.uppercase(), stateValue().activeRepName, lostReason.trim())
+                }
             }
         }
     }
@@ -618,8 +631,24 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
                 "LOST" -> 0
                 else -> 10
             }
-            repository.updateDealStageAndProbability(dealId, newStage, prob)
+            if (isClosureStage(newStage) && stateValue().currentRole == UserRole.SALES_REP) {
+                // Sales reps cannot close a deal directly: it goes to the manager for approval
+                repository.requestClosure(dealId, newStage.uppercase(), stateValue().activeRepName)
+            } else {
+                repository.updateDealStageAndProbability(dealId, newStage, prob)
+            }
         }
+    }
+
+    private fun isClosureStage(stage: String): Boolean =
+        stage.equals(DealStage.DONE.name, ignoreCase = true) || stage.equals(DealStage.LOST.name, ignoreCase = true)
+
+    fun approveClosure(dealId: Long) {
+        viewModelScope.launch { repository.approveClosure(dealId) }
+    }
+
+    fun rejectClosure(dealId: Long) {
+        viewModelScope.launch { repository.rejectClosure(dealId) }
     }
 
     fun reassignDeal(dealId: Long, newRep: String, isRecycled: Boolean = false) {
@@ -630,7 +659,11 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
 
     fun markDealAsLost(dealId: Long, lostReason: String) {
         viewModelScope.launch {
-            repository.markDealAsLost(dealId, lostReason)
+            if (stateValue().currentRole == UserRole.SALES_REP) {
+                repository.requestClosure(dealId, DealStage.LOST.name, stateValue().activeRepName, lostReason)
+            } else {
+                repository.markDealAsLost(dealId, lostReason)
+            }
         }
     }
 

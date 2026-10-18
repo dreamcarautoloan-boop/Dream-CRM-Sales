@@ -78,6 +78,13 @@ class CrmRepository(
     suspend fun reassignDeal(id: Long, newRep: String, isRecycled: Boolean = false) =
         crmDao.reassignDeal(id, newRep, isRecycled)
 
+    suspend fun requestClosure(id: Long, stage: String, requestedBy: String, reason: String = "") =
+        crmDao.requestClosure(id, stage, requestedBy, reason)
+
+    suspend fun approveClosure(id: Long) = crmDao.approveClosure(id)
+
+    suspend fun rejectClosure(id: Long) = crmDao.rejectClosure(id)
+
     suspend fun markDealAsLost(id: Long, lostReason: String) =
         crmDao.markDealAsLost(id, lostReason)
 
