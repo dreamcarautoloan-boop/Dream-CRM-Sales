@@ -24,6 +24,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import com.example.ui.util.CsvExporter
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.Calculate
@@ -237,6 +241,19 @@ fun CrmMainScreen(
 
                         // Top Action Icons
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Export deals & activities to Excel (CSV) - managers / team leaders only
+                            if (state.permissions.canManageTeam) {
+                                TextButton(
+                                    onClick = { CsvExporter.exportAndShare(context, state.deals, state.callLogs) },
+                                    contentPadding = PaddingValues(horizontal = 6.dp),
+                                    modifier = Modifier.testTag("export_button")
+                                ) {
+                                    Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Text("Export", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
                             // Meta Lead Intake
                             IconButton(
                                 onClick = { showMetaLeadDialog = true },
